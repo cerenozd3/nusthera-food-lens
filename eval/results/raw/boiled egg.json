@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "name": "egg, boiled",
+      "grams": 100.0,
+      "confidence": 0.95
+    }
+  ],
+  "notes": "Two halves of a boiled egg seasoned with black pepper."
+}

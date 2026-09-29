@@ -1,7 +1,23 @@
 from pathlib import Path
 
 from .config import FIXTURES_DIR
+from .models import VisionResponse
 from .vision import VisionError, parse_vision_json
+
+
+def find_fixture(filename: str) -> Path | None:
+    """Return the fixture path for an image filename, or None. Path traversal safe."""
+    clean_name = Path(filename).name
+    stem = Path(clean_name).stem
+    candidates = [
+        FIXTURES_DIR / f"{stem}.json",
+        FIXTURES_DIR / f"{clean_name}.json",
+        FIXTURES_DIR / clean_name,
+    ]
+    for cand in candidates:
+        if cand.is_file():
+            return cand
+    return None
 
 
 def load_fixture(filename: str) -> VisionResponse:
@@ -11,17 +27,7 @@ def load_fixture(filename: str) -> VisionResponse:
     Raises VisionError if the fixture is missing, so fake data is never invented.
     """
     clean_name = Path(filename).name
-    stem = Path(clean_name).stem
-    candidates = [
-        FIXTURES_DIR / f"{stem}.json",
-        FIXTURES_DIR / f"{clean_name}.json",
-        FIXTURES_DIR / clean_name,
-    ]
-    target_path: Path | None = None
-    for cand in candidates:
-        if cand.is_file():
-            target_path = cand
-            break
+    target_path = find_fixture(filename)
 
     if target_path is None:
         available = sorted([p.stem for p in FIXTURES_DIR.glob("*.json")])

@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "name": "chicken breast, grilled",
+      "grams": 180.0,
+      "confidence": 0.95
+    },
+    {
+      "name": "bulgur pilaf, cooked",
+      "grams": 120.0,
+      "confidence": 0.9
+    },
+    {
+      "name": "green salad with dressing",
+      "grams": 150.0,
+      "confidence": 0.9
+    }
+  ],
+  "notes": "Plate containing grilled chicken breast, a portion of bulgur pilaf, and a side green salad with cucumbers, tomatoes, and carrots."
+}

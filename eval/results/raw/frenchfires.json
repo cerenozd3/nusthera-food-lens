@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "name": "french fries",
+      "grams": 150.0,
+      "confidence": 0.95
+    }
+  ],
+  "notes": "Portion is a basket of seasoned french fries."
+}

@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "name": "orange",
+      "grams": 100.0,
+      "confidence": 0.95
+    }
+  ],
+  "notes": "Includes half an orange and a glass of orange juice (orange juice is not listed, so only the orange fruit portion is tagged)."
+}

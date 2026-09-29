@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "name": "pasta, cooked",
+      "grams": 220.0,
+      "confidence": 0.95
+    },
+    {
+      "name": "chicken breast, grilled",
+      "grams": 160.0,
+      "confidence": 0.95
+    },
+    {
+      "name": "spinach, cooked",
+      "grams": 40.0,
+      "confidence": 0.9
+    },
+    {
+      "name": "olive oil",
+      "grams": 15.0,
+      "confidence": 0.8
+    }
+  ],
+  "notes": "Penne pasta served with sliced grilled chicken breast and cooked spinach, likely tossed in olive oil or pesto sauce."
+}

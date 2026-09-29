@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "name": "banana",
+      "grams": 118.0,
+      "confidence": 0.99
+    }
+  ],
+  "notes": "Single medium banana on a wooden table."
+}

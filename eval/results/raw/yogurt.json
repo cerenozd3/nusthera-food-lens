@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "name": "yogurt, plain",
+      "grams": 200.0,
+      "confidence": 0.95
+    }
+  ],
+  "notes": "Bowl of plain yogurt."
+}

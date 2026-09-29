@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "name": "bread, white",
+      "grams": 80.0,
+      "confidence": 0.95
+    }
+  ],
+  "notes": "Single white bread loaf (somun ekmek)."
+}

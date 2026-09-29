@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "name": "kofte, grilled meatballs",
+      "grams": 160.0,
+      "confidence": 0.95
+    },
+    {
+      "name": "french fries",
+      "grams": 100.0,
+      "confidence": 0.95
+    },
+    {
+      "name": "tomato",
+      "grams": 50.0,
+      "confidence": 0.9
+    },
+    {
+      "name": "cucumber",
+      "grams": 40.0,
+      "confidence": 0.8
+    }
+  ],
+  "notes": "Includes grilled kofte, french fries, a roasted tomato wedge, a grilled green pepper, and a small bowl of sauce."
+}

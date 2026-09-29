@@ -1,0 +1,20 @@
+{
+  "items": [
+    {
+      "name": "salmon, grilled",
+      "grams": 220.0,
+      "confidence": 0.95
+    },
+    {
+      "name": "green salad with dressing",
+      "grams": 80.0,
+      "confidence": 0.9
+    },
+    {
+      "name": "almonds",
+      "grams": 10.0,
+      "confidence": 0.8
+    }
+  ],
+  "notes": "Two pieces of grilled salmon served with a green salad garnished with radish, orange slices, and almonds, plus lemon wedges."
+}

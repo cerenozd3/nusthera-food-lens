@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "name": "pasta, cooked",
+      "grams": 220.0,
+      "confidence": 0.95
+    },
+    {
+      "name": "tomato",
+      "grams": 100.0,
+      "confidence": 0.85
+    },
+    {
+      "name": "cheese, cheddar",
+      "grams": 20.0,
+      "confidence": 0.7
+    },
+    {
+      "name": "olive oil",
+      "grams": 15.0,
+      "confidence": 0.65
+    }
+  ],
+  "notes": "A bowl of spaghetti with tomato sauce, topped with grated cheese and fresh basil leaves."
+}
