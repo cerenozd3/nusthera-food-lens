@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
@@ -19,8 +19,6 @@ app = FastAPI(title="Nusthera Food Lens")
 FOODS = load_foods()
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 INDEX_HTML = Path(__file__).resolve().parent / "static" / "index.html"
-# The daily total counts only what was saved since this server started (saved rows stay in SQLite).
-SERVER_STARTED_AT = datetime.now()
 DISCLAIMER = (
     "Values are estimates only; not medical or dietary advice; allergens cannot be detected."
 )
@@ -100,10 +98,10 @@ def save(body: RecalculateRequest):
     if any(item.unknown for item in meal.items):
         raise HTTPException(status_code=422, detail="Unknown foods cannot be saved.")
     saved = save_items(DB_PATH, meal.items)
-    return {"saved": saved, "daily": daily_totals(DB_PATH, date.today(), SERVER_STARTED_AT)}
+    return {"saved": saved, "daily": daily_totals(DB_PATH, date.today())}
 
 
 @app.get("/daily")
 def daily(day: date | None = None):
     day = day or date.today()
-    return {"date": day.isoformat(), "totals": daily_totals(DB_PATH, day, SERVER_STARTED_AT)}
+    return {"date": day.isoformat(), "totals": daily_totals(DB_PATH, day)}

@@ -98,19 +98,18 @@ def test_daily_total_sums_today_and_ignores_other_days(db):
     assert ayran.nutrition.kcal == 36
 
 
-def test_daily_total_resets_when_server_restarts_but_rows_are_kept(db, monkeypatch):
+def test_daily_total_keeps_todays_meals_across_server_restart(db):
     foods = load_foods()
     rice = resolve_item(DetectedItem(name="rice, white, cooked", grams=100, confidence=1), foods)
     ayran = resolve_item(DetectedItem(name="ayran", grams=100, confidence=1), foods)
     midnight = datetime.combine(date.today(), time(0, 0, 1))
 
-    save_items(db, [rice], now=midnight)  # saved by the "previous" server run
-    monkeypatch.setattr("src.main.SERVER_STARTED_AT", midnight + timedelta(minutes=1))
+    save_items(db, [rice], now=midnight)  # saved earlier today, before this server process
     client = TestClient(app)
-    assert client.get("/daily").json()["totals"]["kcal"] == 0
+    assert client.get("/daily").json()["totals"]["kcal"] == pytest.approx(130)
 
-    save_items(db, [ayran], now=midnight + timedelta(minutes=2))  # saved after the restart
-    assert client.get("/daily").json()["totals"]["kcal"] == pytest.approx(36)
+    save_items(db, [ayran], now=midnight + timedelta(minutes=2))
+    assert client.get("/daily").json()["totals"]["kcal"] == pytest.approx(166)
     assert len(rows(db)) == 2
 
 

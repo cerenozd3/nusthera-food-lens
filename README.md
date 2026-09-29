@@ -123,8 +123,7 @@ invents a response.
    server. The browser never does nutrition math, and the vision model is not called again.
 5. **Save.** `POST /save` recomputes one more time from the CSV, stores the rows in SQLite and
    returns today's total. Rows containing `unknown` cannot be saved.
-6. **Daily total** card updates. It sums the meals saved today *since the server started*, not the
-   whole history — see [Known limitations](#known-limitations--next-steps).
+6. **Daily total** card updates. It sums every meal saved today in SQLite (`data/food_lens.db`).
 
 Refreshing the page clears the analysis on screen; saved rows stay in the database.
 
@@ -324,9 +323,6 @@ the assignment does not ask for it.
   different source than `foods.csv`, so part of the calorie error belongs to the labels, not the
   model.
 - **One run per number.** See the variance table above.
-- **The Daily total card counts only meals saved since the current server start.** The rows stay in
-  SQLite (`data/food_lens.db`, gitignored); restart the server and the card goes back to zero while
-  the database still holds the history.
 - **Mock mode covers 3 photos.** `rice.jpg`, `rice+chicken.jpg`, `bread.jpg`.
 - **Failed live calls are not saved to `eval/results/raw/`**, so there are 14 raw files for 15
   photos and no raw file for `cips.png`.
