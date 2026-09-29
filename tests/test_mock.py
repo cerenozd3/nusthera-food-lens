@@ -54,6 +54,24 @@ def test_analyze_mock_mode_reads_fixture_and_calculates_csv_nutrition(monkeypatc
     live.assert_not_called()
 
 
+def test_analyze_rice_chicken_fixture_keeps_exact_csv_names(monkeypatch):
+    monkeypatch.setattr("src.main.MOCK_MODE", True)
+    client = TestClient(app)
+    response = client.post(
+        "/analyze",
+        files={"file": ("rice+chicken.jpg", b"fake", "image/jpeg")},
+    )
+    assert response.status_code == 200
+    names = [item["name"] for item in response.json()["items"]]
+    assert names == [
+        "rice, white, cooked",
+        "chicken breast, grilled",
+        "chickpeas, boiled",
+        "ayran",
+    ]
+    assert all(item["unknown"] is False for item in response.json()["items"])
+
+
 def test_analyze_mock_mode_missing_fixture_returns_user_error(monkeypatch):
     monkeypatch.setattr("src.main.MOCK_MODE", True)
     client = TestClient(app)

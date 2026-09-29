@@ -60,3 +60,20 @@ def test_empty_items_yield_zero_totals():
     assert meal.items == []
     assert meal.totals.kcal == 0
     assert meal.totals.protein_g == 0
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "rice, white, cooked",
+        "chicken breast, grilled",
+        "chickpeas, boiled",
+        "ayran",
+    ],
+)
+def test_exact_csv_names_are_never_unknown(name):
+    foods = load_foods()
+    resolved = resolve_item(DetectedItem(name=name, grams=100, confidence=1), foods)
+    assert resolved.unknown is False
+    assert resolved.name == name
+    assert resolved.nutrition is not None

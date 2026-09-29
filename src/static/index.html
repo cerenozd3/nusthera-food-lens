@@ -1,151 +1,712 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Nusthera Food Lens</title>
   <style>
-    :root { font-family: system-ui, sans-serif; color: #1a1a1a; }
-    body { max-width: 52rem; margin: 1.5rem auto; padding: 0 1rem; }
-    h1 { font-size: 1.4rem; margin-bottom: 0.4rem; }
-    .disclaimer {
-      background: #fff6d6;
-      border: 1px solid #e6c35c;
-      padding: 0.75rem 1rem;
-      margin: 0.75rem 0 1.25rem;
-      line-height: 1.4;
+    :root {
+      --bg: #f5f6f8;
+      --card: #ffffff;
+      --text: #172026;
+      --muted: #66727d;
+      --border: #e3e7eb;
+      --primary: #1f7a4d;
+      --primary-hover: #185f3c;
+      --primary-soft: #e8f4ed;
+      --warn-bg: #fff8e6;
+      --warn-border: #f0d68a;
+      --warn-text: #6b5210;
+      --danger-bg: #fdeeee;
+      --danger-border: #f2c0c0;
+      --danger-text: #8b1f1f;
+      --radius: 14px;
+      --shadow: 0 1px 2px rgba(16, 24, 32, 0.05), 0 4px 14px rgba(16, 24, 32, 0.04);
     }
-    .meta { color: #555; font-size: 0.9rem; margin-bottom: 1rem; }
-    form { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
-    button { padding: 0.4rem 0.9rem; cursor: pointer; }
-    .error { color: #8b1a1a; background: #fdeaea; padding: 0.6rem 0.8rem; }
-    table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.92rem; }
-    th, td { border: 1px solid #ddd; padding: 0.4rem 0.5rem; text-align: left; }
-    th { background: #f4f4f4; }
-    .unknown { background: #fff1f1; }
-    .totals { margin-top: 0.9rem; font-weight: 600; }
-    .notes { margin-top: 0.6rem; color: #444; }
-    .est { color: #5a4a00; font-size: 0.8rem; font-weight: normal; }
-    #preview { max-height: 180px; margin: 0.5rem 0; display: none; }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 56rem; margin: 0 auto; padding: 1.5rem 1rem 2.5rem; }
+    header { margin-bottom: 1rem; }
+    h1 { font-size: 1.6rem; line-height: 1.2; margin: 0; letter-spacing: -0.02em; }
+    .subtitle { margin: 0.25rem 0 0; color: var(--muted); }
+    h2 { font-size: 1rem; margin: 0; letter-spacing: -0.01em; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.1rem 1.25rem;
+      margin-top: 1rem;
+    }
+    .card-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .card-note { color: var(--muted); font-size: 0.85rem; }
+
+    .alert {
+      display: flex;
+      gap: 0.7rem;
+      align-items: flex-start;
+      border: 1px solid var(--warn-border);
+      background: var(--warn-bg);
+      color: var(--warn-text);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+    .alert svg { flex: none; margin-top: 0.15rem; }
+    .alert p { margin: 0; }
+    .alert.error {
+      margin-top: 1rem;
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+      color: var(--danger-text);
+    }
+
+    /* Upload */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+    .dropzone {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border: 2px dashed #cbd3da;
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      background: #fafbfc;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .dropzone:hover, .dropzone.dragover { border-color: var(--primary); background: var(--primary-soft); }
+    .dropzone:focus-within { outline: 3px solid rgba(31, 122, 77, 0.25); outline-offset: 2px; }
+    .dropzone-icon {
+      flex: none; width: 3rem; height: 3rem; border-radius: 10px;
+      background: var(--primary-soft); color: var(--primary);
+      display: grid; place-items: center;
+    }
+    #preview { display: none; flex: none; width: 3rem; height: 3rem; object-fit: cover; border-radius: 10px; }
+    .dropzone-title { font-weight: 600; }
+    .dropzone-hint { color: var(--muted); font-size: 0.85rem; }
+    .dropzone-text { min-width: 0; }
+    #file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .form-actions { display: flex; gap: 0.6rem; margin-top: 0.85rem; flex-wrap: wrap; }
+
+    /* Buttons */
+    button {
+      font: inherit;
+      font-weight: 600;
+      border-radius: 10px;
+      padding: 0.55rem 1.1rem;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+    }
+    button:focus-visible { outline: 3px solid rgba(31, 122, 77, 0.35); outline-offset: 2px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-secondary { background: #fff; color: var(--text); border-color: #cbd3da; }
+    .btn-secondary:hover:not(:disabled) { background: #f1f3f5; }
+
+    /* Inputs */
+    input[type="text"], input[type="number"] {
+      font: inherit;
+      color: inherit;
+      background: #fff;
+      border: 1px solid #cbd3da;
+      border-radius: 8px;
+      padding: 0.4rem 0.6rem;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input[type="text"]:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.18);
+    }
+    input[type="number"] { width: 5.5rem; }
+
+    /* Analysis table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+    th {
+      text-align: left;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      padding: 0.5rem 0.6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    td { padding: 0.6rem; border-bottom: 1px solid #f0f2f4; vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #fafbfc; }
+    tr.unknown, tr.unknown:hover { background: #fff3f3; }
+    th.num, td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .food-picker { position: relative; min-width: 11rem; }
+    .food-picker input[type="text"] { width: 100%; }
+    tr.unknown .food-picker input[type="text"] { border-color: var(--danger-border); color: var(--danger-text); }
+    .suggestions {
+      position: absolute;
+      z-index: 20;
+      left: 0;
+      right: 0;
+      top: calc(100% + 4px);
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(16, 24, 32, 0.12);
+      max-height: 11rem;
+      overflow: auto;
+      margin: 0;
+      padding: 0.25rem;
+      list-style: none;
+    }
+    .suggestions li { padding: 0.4rem 0.6rem; border-radius: 6px; cursor: pointer; }
+    .suggestions li:hover { background: var(--primary-soft); }
+    .grams-note {
+      display: block;
+      width: fit-content;
+      margin-top: 0.25rem;
+      padding: 0.05rem 0.5rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      background: #f1f3f5;
+      border-radius: 999px;
+    }
+
+    /* Totals */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+    .stat { background: #f7f9fa; border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.8rem; }
+    .stat-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    .stat-value { display: block; font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .stat.primary { background: var(--primary-soft); border-color: #cfe6d8; }
+    .actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.85rem; }
+    #save-status { color: var(--muted); font-size: 0.88rem; }
+
+    @media (max-width: 720px) {
+      .container { padding: 1rem 0.75rem 2rem; }
+      .card { padding: 0.9rem; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .dropzone { padding: 0.8rem; }
+      .form-actions button, .actions button { flex: 1; }
+
+      /* Table rows become stacked cards */
+      table, tbody, tr, td { display: block; width: 100%; }
+      thead { position: absolute; left: -9999px; }
+      tbody tr, tbody tr:hover { border: 1px solid var(--border); border-radius: 12px; padding: 0.4rem 0.6rem; margin-bottom: 0.6rem; background: #fff; }
+      tbody tr.unknown, tbody tr.unknown:hover { background: #fff3f3; }
+      td { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; border: 0; padding: 0.3rem 0; }
+      td::before { content: attr(data-label); color: var(--muted); font-size: 0.8rem; flex: none; }
+      td.food-cell { flex-direction: column; align-items: stretch; gap: 0.25rem; }
+      td.num { text-align: right; }
+      .food-picker { min-width: 0; }
+    }
   </style>
 </head>
 <body>
-  <h1>Food Lens</h1>
-  <p class="disclaimer">Tahmini değerlerdir; tıbbi veya diyet tavsiyesi değildir; alerjen tespiti yapılamaz.</p>
-  <p class="meta" id="mode">Sunucu durumu yükleniyor…</p>
-  <form id="upload-form">
-    <label>Yemek fotoğrafı
-      <input id="file" name="file" type="file" accept="image/jpeg,image/png,image/webp" required>
-    </label>
-    <button type="submit" id="submit">Analiz et</button>
-  </form>
-  <img id="preview" alt="Yüklenen fotoğraf önizlemesi">
-  <p class="error" id="error" hidden></p>
-  <section id="result" hidden>
-    <table>
-      <thead>
-        <tr>
-          <th>Yiyecek</th>
-          <th>Tahmini gramaj <span class="est">(tahmini)</span></th>
-          <th>Güven</th>
-          <th>kcal</th>
-          <th>Protein (g)</th>
-          <th>Karb. (g)</th>
-          <th>Yağ (g)</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-    <p class="notes" id="notes"></p>
-    <p class="totals" id="totals"></p>
-  </section>
+  <main class="container">
+    <header>
+      <h1>Food Lens</h1>
+      <p class="subtitle">Estimate calories and macros from a meal photo.</p>
+    </header>
+
+    <div class="alert" role="note">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <p>Values are estimates only; not medical or dietary advice; allergens cannot be detected.</p>
+    </div>
+
+    <form id="upload-form" class="card" autocomplete="off">
+      <label class="dropzone" id="dropzone" for="file">
+        <input id="file" name="file" type="file" class="sr-only" accept="image/jpeg,image/png,image/webp" required>
+        <img id="preview" alt="Uploaded photo preview">
+        <span class="dropzone-icon" id="dropzone-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </span>
+        <span class="dropzone-text">
+          <span class="dropzone-title" id="file-name" style="display:block">Choose a meal photo</span>
+          <span class="dropzone-hint">Drop an image here or click to browse. JPEG, PNG or WebP.</span>
+        </span>
+      </label>
+      <div class="form-actions">
+        <button type="submit" id="submit" class="btn-primary" disabled>Analyze</button>
+        <button type="button" id="clear" class="btn-secondary">Clear</button>
+      </div>
+    </form>
+
+    <div class="alert error" id="error" role="alert" hidden></div>
+
+    <section id="result" hidden>
+      <div class="card">
+        <div class="card-head">
+          <h2>Analysis</h2>
+          <span class="card-note">Search a food or edit the weight to recalculate.</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Food</th>
+              <th>Estimated weight (g)</th>
+              <th class="num">Calories</th>
+              <th class="num">Protein</th>
+              <th class="num">Carbs</th>
+              <th class="num">Fat</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>Meal total</h2>
+          <span class="card-note">Unknown foods are not counted.</span>
+        </div>
+        <div class="stats">
+          <div class="stat primary"><span class="stat-label">Calories</span><span class="stat-value" id="total-kcal">—</span></div>
+          <div class="stat"><span class="stat-label">Protein</span><span class="stat-value" id="total-protein">—</span></div>
+          <div class="stat"><span class="stat-label">Carbs</span><span class="stat-value" id="total-carbs">—</span></div>
+          <div class="stat"><span class="stat-label">Fat</span><span class="stat-value" id="total-fat">—</span></div>
+        </div>
+        <div class="actions">
+          <button type="button" id="save" class="btn-primary" disabled>Save</button>
+          <span id="save-status" role="status"></span>
+        </div>
+      </div>
+    </section>
+
+    <section id="daily" class="card">
+      <div class="card-head">
+        <h2>Daily total</h2>
+        <span class="card-note">Saved meals for today</span>
+      </div>
+      <div class="stats">
+        <div class="stat primary"><span class="stat-label">Calories</span><span class="stat-value" id="daily-kcal">—</span></div>
+        <div class="stat"><span class="stat-label">Protein</span><span class="stat-value" id="daily-protein">—</span></div>
+        <div class="stat"><span class="stat-label">Carbs</span><span class="stat-value" id="daily-carbs">—</span></div>
+        <div class="stat"><span class="stat-label">Fat</span><span class="stat-value" id="daily-fat">—</span></div>
+      </div>
+    </section>
+  </main>
+
   <script>
     const form = document.getElementById("upload-form");
     const fileInput = document.getElementById("file");
     const submit = document.getElementById("submit");
+    const clearBtn = document.getElementById("clear");
     const errorEl = document.getElementById("error");
     const resultEl = document.getElementById("result");
     const rowsEl = document.getElementById("rows");
-    const notesEl = document.getElementById("notes");
-    const totalsEl = document.getElementById("totals");
-    const modeEl = document.getElementById("mode");
     const preview = document.getElementById("preview");
+    const previewIcon = document.getElementById("dropzone-icon");
+    const fileNameEl = document.getElementById("file-name");
+    const dropzone = document.getElementById("dropzone");
+    const EMPTY_FILE_LABEL = "Choose a meal photo";
 
-    function fmt(n) {
+    let foodNames = [];
+    let editorRows = [];
+    const gramsTimers = {};
+    let renderGen = 0;
+
+    function fmt(n, unit) {
       if (n === null || n === undefined) return "—";
-      return Number(n).toLocaleString("tr-TR", { maximumFractionDigits: 1 });
+      const value = Number(n).toLocaleString("en-US", { maximumFractionDigits: 1 });
+      return unit ? value + " " + unit : value;
     }
 
-    fetch("/health")
+    function showError(message) {
+      errorEl.textContent = message;
+      errorEl.hidden = false;
+    }
+
+    const saveBtn = document.getElementById("save");
+    const saveStatus = document.getElementById("save-status");
+    let saved = false;
+
+    function renderTotals(totals) {
+      document.getElementById("total-kcal").textContent = fmt(totals.kcal, "kcal");
+      document.getElementById("total-protein").textContent = fmt(totals.protein_g, "g");
+      document.getElementById("total-carbs").textContent = fmt(totals.carbs_g, "g");
+      document.getElementById("total-fat").textContent = fmt(totals.fat_g, "g");
+    }
+
+    function renderDaily(totals) {
+      document.getElementById("daily-kcal").textContent = fmt(totals.kcal, "kcal");
+      document.getElementById("daily-protein").textContent = fmt(totals.protein_g, "g");
+      document.getElementById("daily-carbs").textContent = fmt(totals.carbs_g, "g");
+      document.getElementById("daily-fat").textContent = fmt(totals.fat_g, "g");
+    }
+
+    function updateSaveState() {
+      const hasUnknown = editorRows.some((row) => row.name === "unknown");
+      saveBtn.disabled = saved || !editorRows.length || hasUnknown;
+      if (hasUnknown) saveStatus.textContent = "Unknown foods cannot be saved.";
+      else if (saved) saveStatus.textContent = "Saved.";
+      else saveStatus.textContent = "";
+    }
+
+    // One payload shape for /recalculate and /save: exactly the DetectedItem fields.
+    function editorPayload() {
+      return {
+        items: editorRows.map((row) => ({
+          name: row.name,
+          grams: row.grams,
+          confidence: row.confidence || 1,
+        })),
+      };
+    }
+
+    function foodLabelFromAnalyze(item) {
+      return item.unknown ? "unknown" : item.name;
+    }
+
+    function isExactCsvName(name) {
+      return Boolean(name) && name !== "unknown" && foodNames.includes(name);
+    }
+
+    function suggestFoodNames(query) {
+      const needle = query.trim().toLowerCase();
+      if (!needle) return [];
+      const starts = foodNames.filter((name) => name.toLowerCase().startsWith(needle));
+      const contains = foodNames.filter(
+        (name) => name.toLowerCase().includes(needle) && !starts.includes(name)
+      );
+      return starts.concat(contains).slice(0, 8);
+    }
+
+    function setFoodInputValue(input, row) {
+      input.value = row.name && row.name !== "unknown" ? row.name : "unknown";
+    }
+
+    function gramsLabel(row) {
+      return Number(row.grams) === Number(row.originalGrams) ? "estimated" : "edited";
+    }
+
+    function applyNutrition(items) {
+      items.forEach((item, index) => {
+        const row = editorRows[index];
+        if (!row) return;
+        row.name = item.unknown ? "unknown" : item.name;
+        const tr = rowsEl.rows[index];
+        if (!tr) return;
+        tr.classList.toggle("unknown", item.unknown);
+        const foodInput = tr.querySelector(".food-picker input");
+        if (foodInput && document.activeElement !== foodInput) {
+          setFoodInputValue(foodInput, row);
+        }
+        const macros = item.nutrition || {};
+        tr.querySelector(".cell-kcal").textContent = fmt(item.unknown ? null : macros.kcal, "kcal");
+        tr.querySelector(".cell-protein").textContent = fmt(item.unknown ? null : macros.protein_g, "g");
+        tr.querySelector(".cell-carbs").textContent = fmt(item.unknown ? null : macros.carbs_g, "g");
+        tr.querySelector(".cell-fat").textContent = fmt(item.unknown ? null : macros.fat_g, "g");
+        const note = tr.querySelector(".grams-note");
+        note.textContent = gramsLabel(row);
+      });
+    }
+
+    function hideSuggestions(list) {
+      list.hidden = true;
+      list.innerHTML = "";
+    }
+
+    function showSuggestions(list, index, input) {
+      const hits = suggestFoodNames(input.value);
+      list.innerHTML = "";
+      if (!hits.length) {
+        hideSuggestions(list);
+        return;
+      }
+      hits.forEach((name) => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        li.addEventListener("mousedown", async (event) => {
+          event.preventDefault();
+          editorRows[index].name = name;
+          input.value = name;
+          hideSuggestions(list);
+          try {
+            await recalculate();
+          } catch (err) {
+            showError(err.message);
+          }
+        });
+        list.appendChild(li);
+      });
+      list.hidden = false;
+    }
+
+    function renderRows(items) {
+      renderGen += 1;
+      const gen = renderGen;
+      rowsEl.innerHTML = "";
+      items.forEach((item, index) => {
+        const row = editorRows[index];
+        const tr = document.createElement("tr");
+        if (item.unknown) tr.className = "unknown";
+
+        const nameTd = document.createElement("td");
+        nameTd.className = "food-cell";
+        nameTd.dataset.label = "Food";
+        const picker = document.createElement("div");
+        picker.className = "food-picker";
+        const input = document.createElement("input");
+        input.type = "text";
+        input.setAttribute("aria-label", "Search food");
+        input.placeholder = "Search food";
+        setFoodInputValue(input, row);
+        const list = document.createElement("ul");
+        list.className = "suggestions";
+        list.hidden = true;
+        input.addEventListener("input", () => {
+          showSuggestions(list, index, input);
+        });
+        input.addEventListener("blur", (event) => {
+          const next = event.relatedTarget;
+          // Only a suggestion click commits on its own; any other focus move
+          // (e.g. into this row's grams box) must still commit the typed name.
+          if (next && list.contains(next)) return;
+          setTimeout(async () => {
+            if (gen !== renderGen) return;
+            hideSuggestions(list);
+            const text = input.value.trim();
+            const current = editorRows[index];
+            if (current.name !== "unknown" && text === current.name) return;
+            if (isExactCsvName(text)) {
+              current.name = text;
+              input.value = text;
+            } else {
+              current.name = "unknown";
+              input.value = "unknown";
+            }
+            try {
+              await recalculate();
+            } catch (err) {
+              showError(err.message);
+            }
+          }, 120);
+        });
+        picker.append(input, list);
+        nameTd.appendChild(picker);
+
+        const gramsTd = document.createElement("td");
+        gramsTd.dataset.label = "Estimated weight (g)";
+        const gramsInput = document.createElement("input");
+        gramsInput.type = "number";
+        gramsInput.min = "0.1";
+        gramsInput.step = "0.1";
+        gramsInput.setAttribute("aria-label", "Weight in grams");
+        gramsInput.value = String(row.grams);
+        const note = document.createElement("span");
+        note.className = "grams-note";
+        note.textContent = gramsLabel(row);
+        const scheduleGrams = () => {
+          const grams = Number(gramsInput.value);
+          if (!(grams > 0)) return;
+          editorRows[index].grams = grams;
+          note.textContent = gramsLabel(editorRows[index]);
+          clearTimeout(gramsTimers[index]);
+          gramsTimers[index] = setTimeout(async () => {
+            try {
+              await recalculate();
+            } catch (err) {
+              showError(err.message);
+            }
+          }, 150);
+        };
+        gramsInput.addEventListener("input", scheduleGrams);
+        gramsInput.addEventListener("change", scheduleGrams);
+        const gramsWrap = document.createElement("span");
+        gramsWrap.append(gramsInput, note);
+        gramsTd.appendChild(gramsWrap);
+
+        const cells = [
+          ["cell-kcal", "Calories", item.unknown ? null : (item.nutrition || {}).kcal, "kcal"],
+          ["cell-protein", "Protein", item.unknown ? null : (item.nutrition || {}).protein_g, "g"],
+          ["cell-carbs", "Carbs", item.unknown ? null : (item.nutrition || {}).carbs_g, "g"],
+          ["cell-fat", "Fat", item.unknown ? null : (item.nutrition || {}).fat_g, "g"],
+        ].map(([cls, label, value, unit]) => {
+          const td = document.createElement("td");
+          td.className = "num " + cls;
+          td.dataset.label = label;
+          td.textContent = fmt(value, unit);
+          return td;
+        });
+
+        tr.append(nameTd, gramsTd, ...cells);
+        rowsEl.appendChild(tr);
+      });
+    }
+
+    // Drop everything from the previous image. Bumping renderGen also makes any
+    // in-flight blur/recalculate for the old rows a no-op.
+    function clearResults() {
+      renderGen += 1;
+      Object.keys(gramsTimers).forEach((key) => clearTimeout(gramsTimers[key]));
+      editorRows = [];
+      rowsEl.innerHTML = "";
+      renderTotals({ kcal: null, protein_g: null, carbs_g: null, fat_g: null });
+      saved = false;
+      errorEl.hidden = true;
+      resultEl.hidden = true;
+      updateSaveState();
+    }
+
+    function showFile(file) {
+      if (preview.src) URL.revokeObjectURL(preview.src);
+      if (!file) {
+        preview.removeAttribute("src");
+        preview.style.display = "none";
+        previewIcon.hidden = false;
+        fileNameEl.textContent = EMPTY_FILE_LABEL;
+      } else {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+        previewIcon.hidden = true;
+        fileNameEl.textContent = file.name;
+      }
+      submit.disabled = !file;
+    }
+
+    // Fresh start: no file, no analysis. Daily total is loaded separately from the server.
+    function resetPage() {
+      form.reset();
+      showFile(null);
+      clearResults();
+    }
+
+    async function recalculate() {
+      errorEl.hidden = true;
+      saved = false;
+      const gen = renderGen;
+      const response = await fetch("/recalculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editorPayload()),
+      });
+      const payload = await response.json();
+      if (gen !== renderGen) return; // results were cleared or replaced meanwhile
+      if (!response.ok) {
+        const detail = payload.detail || "Could not update the values.";
+        throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+      }
+      applyNutrition(payload.items);
+      renderTotals(payload.totals);
+      updateSaveState();
+      resultEl.hidden = false;
+    }
+
+    saveBtn.addEventListener("click", async () => {
+      errorEl.hidden = true;
+      saveBtn.disabled = true;
+      try {
+        const response = await fetch("/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editorPayload()),
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          const detail = payload.detail || "Could not save.";
+          throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+        }
+        saved = true;
+        renderDaily(payload.daily);
+      } catch (err) {
+        showError(err.message);
+      }
+      updateSaveState();
+    });
+
+    fetch("/daily")
+      .then((r) => r.json())
+      .then((data) => renderDaily(data.totals))
+      .catch(() => {});
+
+    const namesReady = fetch("/foods")
       .then((r) => r.json())
       .then((data) => {
-        modeEl.textContent = data.mock_mode
-          ? "Mod: mock (API anahtarı gerekmez; kayıtlı fixture okunur)."
-          : "Mod: canlı (görsel Gemini'ye gönderilir).";
+        foodNames = data.names || [];
       })
       .catch(() => {
-        modeEl.textContent = "Sunucu durumuna ulaşılamadı.";
+        foodNames = [];
       });
 
     fileInput.addEventListener("change", () => {
-      const file = fileInput.files[0];
-      if (!file) {
-        preview.style.display = "none";
-        return;
-      }
-      preview.src = URL.createObjectURL(file);
-      preview.style.display = "block";
+      clearResults();
+      showFile(fileInput.files[0]);
+    });
+
+    clearBtn.addEventListener("click", resetPage);
+
+    ["dragenter", "dragover"].forEach((type) =>
+      dropzone.addEventListener(type, (event) => {
+        event.preventDefault();
+        dropzone.classList.add("dragover");
+      })
+    );
+    ["dragleave", "drop"].forEach((type) =>
+      dropzone.addEventListener(type, () => dropzone.classList.remove("dragover"))
+    );
+    dropzone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const files = event.dataTransfer && event.dataTransfer.files;
+      if (!files || !files.length) return;
+      fileInput.files = files;
+      fileInput.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
-      errorEl.hidden = true;
-      resultEl.hidden = true;
+      clearResults();
+      const gen = renderGen;
       const file = fileInput.files[0];
       if (!file) return;
       submit.disabled = true;
-      submit.textContent = "Analiz ediliyor…";
+      submit.textContent = "Analyzing…";
       try {
+        await namesReady;
         const body = new FormData();
         body.append("file", file, file.name);
         const response = await fetch("/analyze", { method: "POST", body });
         const payload = await response.json();
+        if (gen !== renderGen) return; // another file was chosen while this one was analyzing
         if (!response.ok) {
-          const detail = payload.detail || "Analiz başarısız.";
+          const detail = payload.detail || "Analysis failed.";
           throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
         }
-        rowsEl.innerHTML = "";
-        for (const item of payload.items) {
-          const tr = document.createElement("tr");
-          if (item.unknown) tr.className = "unknown";
-          const label = item.unknown
-            ? `unknown (${item.detected_name})`
-            : item.name;
-          const macros = item.nutrition || {};
-          tr.innerHTML =
-            "<td>" + label + "</td>" +
-            "<td>" + fmt(item.grams) + " g <span class='est'>tahmini</span></td>" +
-            "<td>" + fmt(item.confidence) + "</td>" +
-            "<td>" + fmt(item.unknown ? null : macros.kcal) + "</td>" +
-            "<td>" + fmt(item.unknown ? null : macros.protein_g) + "</td>" +
-            "<td>" + fmt(item.unknown ? null : macros.carbs_g) + "</td>" +
-            "<td>" + fmt(item.unknown ? null : macros.fat_g) + "</td>";
-          rowsEl.appendChild(tr);
-        }
-        notesEl.textContent = payload.notes ? ("Not: " + payload.notes) : "";
-        const t = payload.totals;
-        totalsEl.textContent =
-          "Toplam (yalnızca eşleşen yiyecekler, foods.csv): " +
-          fmt(t.kcal) + " kcal · P " + fmt(t.protein_g) +
-          " · K " + fmt(t.carbs_g) + " · Y " + fmt(t.fat_g);
+        editorRows = payload.items.map((item) => ({
+          name: foodLabelFromAnalyze(item),
+          grams: item.grams,
+          originalGrams: item.grams,
+          confidence: item.confidence || 1,
+        }));
+        renderRows(payload.items);
+        renderTotals(payload.totals);
+        saved = false;
+        updateSaveState();
         resultEl.hidden = false;
       } catch (err) {
-        errorEl.textContent = err.message;
-        errorEl.hidden = false;
+        showError(err.message);
       } finally {
-        submit.disabled = false;
-        submit.textContent = "Analiz et";
+        submit.disabled = !fileInput.files[0];
+        submit.textContent = "Analyze";
       }
+    });
+
+    // Refresh (including back/forward cache restores) always starts with an empty analysis.
+    resetPage();
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) resetPage();
     });
   </script>
 </body>

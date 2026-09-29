@@ -8,6 +8,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT_DIR / ".env")
 
 FOODS_CSV_PATH = ROOT_DIR / "data" / "foods.csv"
+DB_PATH = Path(os.getenv("DB_PATH", str(ROOT_DIR / "data" / "food_lens.db")))
 FIXTURES_DIR = ROOT_DIR / "fixtures"
 EVAL_IMAGES_DIR = ROOT_DIR / "eval" / "images"
 

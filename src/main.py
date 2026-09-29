@@ -1,9 +1,16 @@
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from datetime import date, datetime
+from pathlib import Path
 
-from .config import MAX_UPLOAD_MB, MOCK_MODE
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
+
+from .config import DB_PATH, MAX_UPLOAD_MB, MOCK_MODE
 from .foods import food_names, load_foods
 from .mock import load_fixture
+from .models import DetectedItem, VisionResponse
 from .nutrition import resolve_meal
+from .storage import daily_totals, save_items
 from .vision import VisionError, analyze_image
 
 app = FastAPI(title="Nusthera Food Lens")
@@ -11,10 +18,27 @@ app = FastAPI(title="Nusthera Food Lens")
 # Fail fast if the reference table is missing or unreadable.
 FOODS = load_foods()
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+INDEX_HTML = Path(__file__).resolve().parent / "static" / "index.html"
+# The daily total counts only what was saved since this server started (saved rows stay in SQLite).
+SERVER_STARTED_AT = datetime.now()
+DISCLAIMER = (
+    "Values are estimates only; not medical or dietary advice; allergens cannot be detected."
+)
+
+
+class RecalculateRequest(BaseModel):
+    """User edits. Nutrition is recalculated from foods.csv; the vision model is not called."""
+
+    items: list[DetectedItem]
 
 
 @app.get("/")
-def read_root():
+def index():
+    return FileResponse(INDEX_HTML)
+
+
+@app.get("/health")
+def health():
     return {
         "message": "Food Lens API is running",
         "food_count": len(FOODS),
@@ -55,3 +79,31 @@ async def analyze(file: UploadFile = File(...)):
             raise HTTPException(status_code=422, detail=exc.message) from exc
 
     return resolve_meal(vision, FOODS)
+
+
+@app.get("/foods")
+def list_food_names():
+    return {"names": food_names(FOODS)}
+
+
+@app.post("/recalculate")
+def recalculate(body: RecalculateRequest):
+    return resolve_meal(VisionResponse(items=body.items, notes=""), FOODS)
+
+
+@app.post("/save")
+def save(body: RecalculateRequest):
+    """Save corrected items. Nutrition is recomputed from foods.csv, never taken from the client."""
+    meal = resolve_meal(VisionResponse(items=body.items, notes=""), FOODS)
+    if not meal.items:
+        raise HTTPException(status_code=422, detail="There are no items to save.")
+    if any(item.unknown for item in meal.items):
+        raise HTTPException(status_code=422, detail="Unknown foods cannot be saved.")
+    saved = save_items(DB_PATH, meal.items)
+    return {"saved": saved, "daily": daily_totals(DB_PATH, date.today(), SERVER_STARTED_AT)}
+
+
+@app.get("/daily")
+def daily(day: date | None = None):
+    day = day or date.today()
+    return {"date": day.isoformat(), "totals": daily_totals(DB_PATH, day, SERVER_STARTED_AT)}

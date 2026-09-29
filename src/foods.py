@@ -37,3 +37,15 @@ def food_names(foods: dict[str, FoodRow] | None = None) -> list[str]:
 def get_food(name: str, foods: dict[str, FoodRow]) -> FoodRow | None:
     """Exact CSV name only. Callers mark a miss as unknown."""
     return foods.get(name)
+
+
+def suggest_food_names(query: str, names: list[str], limit: int = 8) -> list[str]:
+    """Return existing CSV names that start with or contain query. No invented names."""
+    needle = query.strip().lower()
+    if not needle:
+        return []
+    starts = [name for name in names if name.lower().startswith(needle)]
+    contains = [
+        name for name in names if needle in name.lower() and name not in starts
+    ]
+    return (starts + contains)[:limit]
