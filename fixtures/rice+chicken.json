@@ -1,0 +1,25 @@
+{
+  "items": [
+    {
+      "name": "rice, white, cooked",
+      "grams": 220,
+      "confidence": 0.95
+    },
+    {
+      "name": "chicken breast, grilled",
+      "grams": 60,
+      "confidence": 0.90
+    },
+    {
+      "name": "chickpeas, boiled",
+      "grams": 40,
+      "confidence": 0.95
+    },
+    {
+      "name": "ayran",
+      "grams": 150,
+      "confidence": 0.85
+    }
+  ],
+  "notes": "Traditional Turkish dish of chicken and chickpeas over rice pilaf (Tavuklu Nohutlu Pilav), served with a glass of ayran."
+}

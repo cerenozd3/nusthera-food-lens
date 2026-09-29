@@ -35,5 +35,5 @@ def food_names(foods: dict[str, FoodRow] | None = None) -> list[str]:
 
 
 def get_food(name: str, foods: dict[str, FoodRow]) -> FoodRow | None:
-    """Exact match only. A miss becomes unknown in a later phase."""
+    """Exact CSV name only. Callers mark a miss as unknown."""
     return foods.get(name)

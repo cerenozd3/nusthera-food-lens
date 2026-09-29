@@ -1,7 +1,8 @@
 from fastapi import FastAPI, File, HTTPException, UploadFile
 
-from .config import MAX_UPLOAD_MB
+from .config import MAX_UPLOAD_MB, MOCK_MODE
 from .foods import food_names, load_foods
+from .mock import load_fixture
 from .nutrition import resolve_meal
 from .vision import VisionError, analyze_image
 
@@ -17,6 +18,7 @@ def read_root():
     return {
         "message": "Food Lens API is running",
         "food_count": len(FOODS),
+        "mock_mode": MOCK_MODE,
     }
 
 
@@ -39,9 +41,17 @@ async def analyze(file: UploadFile = File(...)):
             status_code=400,
             detail=f"Image is larger than {MAX_UPLOAD_MB:g} MB.",
         )
-    try:
-        # Live Gemini only. Mock/fixture routing is a later phase and must not happen here.
-        vision = analyze_image(data, content_type, food_names(FOODS))
-    except VisionError as exc:
-        raise HTTPException(status_code=422, detail=exc.message) from exc
+
+    filename = file.filename or "uploaded.jpg"
+    if MOCK_MODE:
+        try:
+            vision = load_fixture(filename)
+        except VisionError as exc:
+            raise HTTPException(status_code=422, detail=exc.message) from exc
+    else:
+        try:
+            vision = analyze_image(data, content_type, food_names(FOODS))
+        except VisionError as exc:
+            raise HTTPException(status_code=422, detail=exc.message) from exc
+
     return resolve_meal(vision, FOODS)

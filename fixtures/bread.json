@@ -1,0 +1,10 @@
+{
+  "items": [
+    {
+      "name": "bread, white",
+      "grams": 80,
+      "confidence": 0.95
+    }
+  ],
+  "notes": "A single loaf of white bread."
+}

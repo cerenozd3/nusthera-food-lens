@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nusthera Food Lens</title>
+  <style>
+    :root { font-family: system-ui, sans-serif; color: #1a1a1a; }
+    body { max-width: 52rem; margin: 1.5rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.4rem; margin-bottom: 0.4rem; }
+    .disclaimer {
+      background: #fff6d6;
+      border: 1px solid #e6c35c;
+      padding: 0.75rem 1rem;
+      margin: 0.75rem 0 1.25rem;
+      line-height: 1.4;
+    }
+    .meta { color: #555; font-size: 0.9rem; margin-bottom: 1rem; }
+    form { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; }
+    button { padding: 0.4rem 0.9rem; cursor: pointer; }
+    .error { color: #8b1a1a; background: #fdeaea; padding: 0.6rem 0.8rem; }
+    table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; font-size: 0.92rem; }
+    th, td { border: 1px solid #ddd; padding: 0.4rem 0.5rem; text-align: left; }
+    th { background: #f4f4f4; }
+    .unknown { background: #fff1f1; }
+    .totals { margin-top: 0.9rem; font-weight: 600; }
+    .notes { margin-top: 0.6rem; color: #444; }
+    .est { color: #5a4a00; font-size: 0.8rem; font-weight: normal; }
+    #preview { max-height: 180px; margin: 0.5rem 0; display: none; }
+  </style>
+</head>
+<body>
+  <h1>Food Lens</h1>
+  <p class="disclaimer">Tahmini değerlerdir; tıbbi veya diyet tavsiyesi değildir; alerjen tespiti yapılamaz.</p>
+  <p class="meta" id="mode">Sunucu durumu yükleniyor…</p>
+  <form id="upload-form">
+    <label>Yemek fotoğrafı
+      <input id="file" name="file" type="file" accept="image/jpeg,image/png,image/webp" required>
+    </label>
+    <button type="submit" id="submit">Analiz et</button>
+  </form>
+  <img id="preview" alt="Yüklenen fotoğraf önizlemesi">
+  <p class="error" id="error" hidden></p>
+  <section id="result" hidden>
+    <table>
+      <thead>
+        <tr>
+          <th>Yiyecek</th>
+          <th>Tahmini gramaj <span class="est">(tahmini)</span></th>
+          <th>Güven</th>
+          <th>kcal</th>
+          <th>Protein (g)</th>
+          <th>Karb. (g)</th>
+          <th>Yağ (g)</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <p class="notes" id="notes"></p>
+    <p class="totals" id="totals"></p>
+  </section>
+  <script>
+    const form = document.getElementById("upload-form");
+    const fileInput = document.getElementById("file");
+    const submit = document.getElementById("submit");
+    const errorEl = document.getElementById("error");
+    const resultEl = document.getElementById("result");
+    const rowsEl = document.getElementById("rows");
+    const notesEl = document.getElementById("notes");
+    const totalsEl = document.getElementById("totals");
+    const modeEl = document.getElementById("mode");
+    const preview = document.getElementById("preview");
+
+    function fmt(n) {
+      if (n === null || n === undefined) return "—";
+      return Number(n).toLocaleString("tr-TR", { maximumFractionDigits: 1 });
+    }
+
+    fetch("/health")
+      .then((r) => r.json())
+      .then((data) => {
+        modeEl.textContent = data.mock_mode
+          ? "Mod: mock (API anahtarı gerekmez; kayıtlı fixture okunur)."
+          : "Mod: canlı (görsel Gemini'ye gönderilir).";
+      })
+      .catch(() => {
+        modeEl.textContent = "Sunucu durumuna ulaşılamadı.";
+      });
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        preview.style.display = "none";
+        return;
+      }
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      errorEl.hidden = true;
+      resultEl.hidden = true;
+      const file = fileInput.files[0];
+      if (!file) return;
+      submit.disabled = true;
+      submit.textContent = "Analiz ediliyor…";
+      try {
+        const body = new FormData();
+        body.append("file", file, file.name);
+        const response = await fetch("/analyze", { method: "POST", body });
+        const payload = await response.json();
+        if (!response.ok) {
+          const detail = payload.detail || "Analiz başarısız.";
+          throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+        }
+        rowsEl.innerHTML = "";
+        for (const item of payload.items) {
+          const tr = document.createElement("tr");
+          if (item.unknown) tr.className = "unknown";
+          const label = item.unknown
+            ? `unknown (${item.detected_name})`
+            : item.name;
+          const macros = item.nutrition || {};
+          tr.innerHTML =
+            "<td>" + label + "</td>" +
+            "<td>" + fmt(item.grams) + " g <span class='est'>tahmini</span></td>" +
+            "<td>" + fmt(item.confidence) + "</td>" +
+            "<td>" + fmt(item.unknown ? null : macros.kcal) + "</td>" +
+            "<td>" + fmt(item.unknown ? null : macros.protein_g) + "</td>" +
+            "<td>" + fmt(item.unknown ? null : macros.carbs_g) + "</td>" +
+            "<td>" + fmt(item.unknown ? null : macros.fat_g) + "</td>";
+          rowsEl.appendChild(tr);
+        }
+        notesEl.textContent = payload.notes ? ("Not: " + payload.notes) : "";
+        const t = payload.totals;
+        totalsEl.textContent =
+          "Toplam (yalnızca eşleşen yiyecekler, foods.csv): " +
+          fmt(t.kcal) + " kcal · P " + fmt(t.protein_g) +
+          " · K " + fmt(t.carbs_g) + " · Y " + fmt(t.fat_g);
+        resultEl.hidden = false;
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.hidden = false;
+      } finally {
+        submit.disabled = false;
+        submit.textContent = "Analiz et";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -109,6 +109,7 @@ def test_missing_api_key_does_not_call_gemini(monkeypatch):
 
 
 def test_analyze_endpoint_calculates_nutrition_from_csv(monkeypatch):
+    monkeypatch.setattr("src.main.MOCK_MODE", False)
     parsed = VisionResponse.model_validate(VALID_PAYLOAD)
     monkeypatch.setattr("src.main.analyze_image", lambda *args, **kwargs: parsed)
     client = TestClient(app)
@@ -123,6 +124,7 @@ def test_analyze_endpoint_calculates_nutrition_from_csv(monkeypatch):
 
 
 def test_analyze_endpoint_returns_user_facing_error(monkeypatch):
+    monkeypatch.setattr("src.main.MOCK_MODE", False)
     monkeypatch.setattr(
         "src.main.analyze_image",
         MagicMock(side_effect=VisionError("The vision model returned invalid JSON. Please try another photo.")),

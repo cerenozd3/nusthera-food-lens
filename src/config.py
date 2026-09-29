@@ -22,5 +22,5 @@ VISION_API_KEY = os.getenv("VISION_API_KEY", "")
 # Mock is opt-in only. Live mode never falls back to fixtures (phase 3+).
 MOCK_MODE = _as_bool(os.getenv("MOCK_MODE"), default=True)
 PORT = int(os.getenv("PORT", "8000"))
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
 MAX_UPLOAD_MB = float(os.getenv("MAX_UPLOAD_MB", "8"))
